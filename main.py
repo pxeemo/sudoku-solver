@@ -1,76 +1,67 @@
 #!/bin/python
 import numpy as np
+import sys
 
-def board_reader():
+def board_reader(file):
     board = np.zeros((9,9), dtype=int)
-    f = open("board.txt", "r")
+    f = open(file, "r")
     next(f)
-    i = 0
-    while True:
+    for i in range(9):
         char = f.readline()
-        j = 0
-        for c in char:
-            board[i][j] = c
-            j += 1
-            if j == 9:
-                break
-        i += 1
-        if i == 9:
-            i = 0
-            break
+        for j in range(9):
+            board[i][j] = char[j]
     return board
 
-board = board_reader()
-print(board)
-
-
-def check_cell(row, colum, n):
-    # check_row
-    if n in board[row]:
+def check_cell(board, row, colum, num):
+    # check number exist in row
+    if num in board[row]:
         return False
 
-    # check_colum
+    # check number exist in colum
     for rows in board:
-        if rows[colum] == n:
+        if rows[colum] == num:
             return False
 
-    # check_square
-    square_start_row = int(row / 3) * 3
-    square_start_colum = int(colum / 3) * 3
-    for i in range(square_start_row, square_start_row + 3):
-        for j in range(square_start_colum, square_start_colum + 3):
-            if board[i][j] == n:
+    # check number exist in square
+    square_row = int(row / 3) * 3
+    square_colum = int(colum / 3) * 3
+    for i in range(square_row, square_row + 3):
+        for j in range(square_colum, square_colum + 3):
+            if board[i][j] == num:
                 return False
     return True
 
 
-def each_self():
-    for i in range(9):
-        for j in range(9):
-            if board[i][j] != 0:
+def by_each(board):
+    # function to check each cell
+    for row in range(9):
+        for colum in range(9):
+            if board[row][colum] != 0:
                 continue
             result = []
-            for n in range(1, 10):
-                result.append(check_cell(i, j, n))
+            for num in range(1, 10):
+                result.append(check_cell(board, row, colum, num))
 
             if result.count(True) == 1:
-                board[i][j] = result.index(True) + 1
+                return row, colum, result.index(True) + 1
 
-def each_row():
-    for n in range(1, 10):
-        for i in range(9):
+def by_row(board):
+    # function to check by each row
+    for num in range(1, 10):
+        for row in range(9):
             result = []
-            for j in range(9):
-                if board[i][j] != 0:
+            for colum in range(9):
+                if board[row][colum] != 0:
                     result.append(False)
                     continue
-                result.append(check_cell(i, j, n))
+                result.append(check_cell(board, row, colum, num))
 
             if result.count(True) == 1:
-                board[i][result.index(True)] = n
+                return row, result.index(True), num
 
-def each_square():
-    for n in range(1, 10):
+def by_square(board):
+    # function to check by each square
+    for num in range(1, 10):
         for big in range(9):
             big_row = int(big / 3)
             big_colum = big % 3
@@ -83,35 +74,43 @@ def each_square():
                 if board[row][colum] != 0:
                     result.append(False)
                     continue
-                result.append(check_cell(row, colum, n))
+                result.append(check_cell(board, row, colum, num))
             if result.count(True) == 1:
                 row = (big_row * 3) + int(result.index(True) / 3)
                 colum = (big_colum * 3) + (result.index(True) % 3)
-                board[row][colum] = n
+                return row, colum, num
 
-
-def each_colum():
-    for n in range(1, 10):
-        for j in range(9):
+def by_colum(board):
+    # function to check by each colum
+    for num in range(1, 10):
+        for colum in range(9):
             result = []
-            for i in range(9):
-                if board[i][j] != 0:
+            for row in range(9):
+                if board[row][colum] != 0:
                     result.append(False)
                     continue
-                result.append(check_cell(i, j, n))
+                result.append(check_cell(board, row, colum, num))
 
             if result.count(True) == 1:
-                board[result.index(True)][j] = n
+                return result.index(True), colum, num
 
-def solve():
-    while np.count_nonzero(board == 0) > 4:
-        tmp = board.copy()
-        each_square()
-        each_row()
-        each_colum()
-        each_self()
-        if np.array_equal(tmp, board):
+def solve(board):
+    while 0 in board:
+        values = (by_row(board) or 
+                  by_colum(board) or 
+                  by_square(board) or 
+                  by_each(board))
+        if values == None:
+            print("Can't solve more!")
             break
+        row, colum, number = values
+        board[row][colum] = number
+    return board
 
-solve()
-print(*board,sep="\n")
+unsolved_board = board_reader(sys.argv[1])
+print("\nYour unsolved board:")
+print(*unsolved_board, sep = "\n")
+
+solved_board = solve(unsolved_board)
+print("\nYour solved board:")
+print(*solved_board, sep = "\n")
