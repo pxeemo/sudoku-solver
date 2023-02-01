@@ -1,6 +1,6 @@
 #!/bin/python
 import numpy as np
-import sys
+import argparse
 
 def board_reader(file):
     board = np.zeros((9,9), dtype=int)
@@ -11,6 +11,31 @@ def board_reader(file):
         for j in range(9):
             board[i][j] = char[j]
     return board
+
+def pretty_board(board):
+    board = board.reshape((81)).astype(np.str_)
+    box = """
+┏━━━┯━━━┯━━━┳━━━┯━━━┯━━━┳━━━┯━━━┯━━━┓
+┃ {} │ {} │ {} ┃ {} │ {} │ {} ┃ {} │ {} │ {} ┃
+┠───┼───┼───╂───┼───┼───╂───┼───┼───┨
+┃ {} │ {} │ {} ┃ {} │ {} │ {} ┃ {} │ {} │ {} ┃
+┠───┼───┼───╂───┼───┼───╂───┼───┼───┨
+┃ {} │ {} │ {} ┃ {} │ {} │ {} ┃ {} │ {} │ {} ┃
+┣━━━┿━━━┿━━━╋━━━┿━━━┿━━━╋━━━┿━━━┿━━━┫
+┃ {} │ {} │ {} ┃ {} │ {} │ {} ┃ {} │ {} │ {} ┃
+┠───┼───┼───╂───┼───┼───╂───┼───┼───┨
+┃ {} │ {} │ {} ┃ {} │ {} │ {} ┃ {} │ {} │ {} ┃
+┠───┼───┼───╂───┼───┼───╂───┼───┼───┨
+┃ {} │ {} │ {} ┃ {} │ {} │ {} ┃ {} │ {} │ {} ┃
+┣━━━┿━━━┿━━━╋━━━┿━━━┿━━━╋━━━┿━━━┿━━━┫
+┃ {} │ {} │ {} ┃ {} │ {} │ {} ┃ {} │ {} │ {} ┃
+┠───┼───┼───╂───┼───┼───╂───┼───┼───┨
+┃ {} │ {} │ {} ┃ {} │ {} │ {} ┃ {} │ {} │ {} ┃
+┠───┼───┼───╂───┼───┼───╂───┼───┼───┨
+┃ {} │ {} │ {} ┃ {} │ {} │ {} ┃ {} │ {} │ {} ┃
+┗━━━┷━━━┷━━━┻━━━┷━━━┷━━━┻━━━┷━━━┷━━━┛
+"""
+    return box.format(*board)
 
 def check_cell(board, row, colum, num):
     # check number exist in row
@@ -101,16 +126,24 @@ def solve(board):
                   by_square(board) or 
                   by_each(board))
         if values == None:
-            print("Can't solve more!")
-            break
+            print("Can't solve all!")
+            return board
         row, colum, number = values
         board[row][colum] = number
     return board
 
-unsolved_board = board_reader(sys.argv[1])
-print("\nYour unsolved board:")
-print(*unsolved_board, sep = "\n")
+parser = argparse.ArgumentParser()
+parser.add_argument("file", help="the board text file")
+parser.add_argument("-u","--unsolved", 
+                    help="show the unsolved board",
+                    action="store_true")
+args = parser.parse_args()
+
+unsolved_board = board_reader(args.file)
+if args.unsolved:
+    print("Your unsolved board:")
+    print(pretty_board(unsolved_board))
 
 solved_board = solve(unsolved_board)
-print("\nYour solved board:")
-print(*solved_board, sep = "\n")
+print("Your solved board:")
+print(pretty_board(solved_board))
